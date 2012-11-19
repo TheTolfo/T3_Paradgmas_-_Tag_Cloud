@@ -1,0 +1,13 @@
+name:           Trab01-SVG
+version:        0.1
+cabal-version:  >= 1.2
+build-type:     Simple
+author:         TheTolfo
+
+executable Trab01-SVG
+  hs-source-dirs:  src
+  main-is:         Main.hs
+  build-depends:   base >= 4
+  ghc-options:     -fglasgow-exts -fwith
+  extensions:      ForeignFunctionInterface ForeignFunctionInterface OverlappingInstances UndecidableInstances IncoherentInstances Generics
+
