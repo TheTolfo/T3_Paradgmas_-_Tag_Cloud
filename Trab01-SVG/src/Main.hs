@@ -4,12 +4,16 @@
 --}
 
 
--- LINK PARA O REPOSITÓRIO
--- https://github.com/TheTolfo/T3_Paradgmas_-_Tag_Cloud.git
+-- Link para o repositório em: https://github.com/TheTolfo/T3_Paradgmas_-_Tag_Cloud.git
 
 module Main where
 
+import System.Random -- Para gerar valores random (cor do circulo)
+
 import Text.Printf -- Oba, Haskell tem printf! :-)
+
+import Data.List -- Funções para lista
+
 
 type Point     = (Float,Float)
 type Color     = (Int,Int,Int)
@@ -57,10 +61,22 @@ svgBubbleGen w h dataset = [svgCircle ((fromIntegral w/2, fromIntegral h/2), 10.
 
 
 -- Gera string representando um circulo em SVG. A cor do circulo esta fixa. 
--- TODO: Alterar esta funcao para mostrar um circulo de uma cor fornecida como parametro.
-svgCircle :: Circle -> String
-svgCircle ((x,y),r) = printf "<circle cx=\"%f\" cy=\"%f\" r=\"%f\" fill=\"rgb(255,0,0)\" />\n" x y r
 
+geraRand :: IO ()
+geraRand = 
+  do 
+     x <- randomRIO (0,255::Int)
+     y <- randomRIO (0,255::Int)
+     z <- randomRIO (0,255::Int)
+     printf ("rgb(" ++ (show x) ++ "," ++ (show y) ++ "," ++ (show z) ++ ")")
+     
+
+svgCircle :: Circle -> String
+svgCircle ((x,y),r) = printf "<circle cx=\"%f\" cy=\"%f\" r=\"%f\" fill=\"rbg(255,0,0)\" />\n" x y r
+--  do 
+--    printf "<circle cx=\"%f\" cy=\"%f\" r=\"%f\" fill=\"" x y r
+--    geraRand
+--    printf "\" />\n"
 
 -- Configura o viewBox da imagem e coloca retangulo branco no fundo
 svgViewBox :: Int -> Int -> String
