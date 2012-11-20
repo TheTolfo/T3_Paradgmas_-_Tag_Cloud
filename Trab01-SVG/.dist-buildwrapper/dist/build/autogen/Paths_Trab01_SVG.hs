@@ -24,7 +24,7 @@ getBinDir :: IO FilePath
 getBinDir = getPrefixDirRel bindirrel
 
 getLibDir :: IO FilePath
-getLibDir = getPrefixDirRel "Trab01-SVG-0.1\\ghc-7.4.1"
+getLibDir = getPrefixDirRel "Trab01-SVG-0.1\\ghc-7.4.2"
 
 getDataDir :: IO FilePath
 getDataDir =  catchIO (getEnv "Trab01_SVG_datadir") (\_ -> getPrefixDirRel "Trab01-SVG-0.1")

@@ -8,12 +8,10 @@
 
 module Main where
 
+import System.IO.Unsafe -- Para remover o IO do tipo IO Int ods valores gerados randomicamente
 import System.Random -- Para gerar valores random (cor do circulo)
-
 import Text.Printf -- Oba, Haskell tem printf! :-)
-
 import Data.List -- Funções para lista
-
 
 type Point     = (Float,Float)
 type Color     = (Int,Int,Int)
@@ -37,13 +35,13 @@ main = do
         where 
                 infile = "dataset.txt"
                 outfile = "tagcloud.svg"
-
-
+--
+--
 -- Transforma lista de strings em lista de inteiros
 readInts :: [String] -> [Int]
 readInts ss = map read ss
-
-
+--
+--
 -- Gera o documento SVG da tag cloud, concatenando cabecalho, conteudo e rodape
 svgCloudGen :: Int -> Int -> [Int] -> String
 svgCloudGen w h dataset = 
@@ -51,33 +49,27 @@ svgCloudGen w h dataset =
         "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n" ++
         (svgViewBox w h) ++
         (concat (svgBubbleGen w h dataset)) ++ "</svg>\n"
-
-
+--
+--
 -- Esta funcao deve gerar a lista de circulos em formato SVG.
 -- A implementacao atual eh apenas um teste que gera um circulo posicionado no meio da figura.
 -- TODO: Alterar essa funcao para usar os dados do dataset.
 svgBubbleGen:: Int -> Int -> [Int] -> [String]
 svgBubbleGen w h dataset = [svgCircle ((fromIntegral w/2, fromIntegral h/2), 10.0)]
-
-
--- Gera string representando um circulo em SVG. A cor do circulo esta fixa. 
-
-geraRand :: IO ()
-geraRand = 
-  do 
-     x <- randomRIO (0,255::Int)
-     y <- randomRIO (0,255::Int)
-     z <- randomRIO (0,255::Int)
-     printf ("rgb(" ++ (show x) ++ "," ++ (show y) ++ "," ++ (show z) ++ ")")
-     
-
+--
+--
+-- Gera string representando um circulo em SVG. randomizando 3 valores para usar como RGB.
+geraRand :: IO Int
+geraRand = getStdRandom (randomR (0,255::Int))
+--     
 svgCircle :: Circle -> String
-svgCircle ((x,y),r) = printf "<circle cx=\"%f\" cy=\"%f\" r=\"%f\" fill=\"rbg(255,0,0)\" />\n" x y r
---  do 
---    printf "<circle cx=\"%f\" cy=\"%f\" r=\"%f\" fill=\"" x y r
---    geraRand
---    printf "\" />\n"
-
+svgCircle ((x,y),r) = printf "<circle cx=\"%f\" cy=\"%f\" r=\"%f\" fill=\"rbg(%d,%d,%d)\" />\n" x y r red green blue
+  where
+       red = unsafePerformIO geraRand
+       green = unsafePerformIO geraRand
+       blue = unsafePerformIO geraRand
+--
+--
 -- Configura o viewBox da imagem e coloca retangulo branco no fundo
 svgViewBox :: Int -> Int -> String
 svgViewBox w h =
