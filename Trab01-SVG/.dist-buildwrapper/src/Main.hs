@@ -63,7 +63,7 @@ geraRand :: IO Int
 geraRand = getStdRandom (randomR (0,255::Int))
 --     
 svgCircle :: Circle -> String
-svgCircle ((x,y),r) = printf "<circle cx=\"%f\" cy=\"%f\" r=\"%f\" fill=\"rbg(%d,%d,%d)\" />\n" x y r red green blue
+svgCircle ((x,y),r) = printf "<circle cx=\"%f\" cy=\"%f\" r=\"%f\" fill=\"rgb(%d,%d,%d)\" />\n" x y r red green blue
   where
        red = unsafePerformIO geraRand
        green = unsafePerformIO geraRand
