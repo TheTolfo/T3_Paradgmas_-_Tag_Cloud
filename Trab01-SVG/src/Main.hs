@@ -17,6 +17,7 @@ type Point     = (Float,Float)
 type Color     = (Int,Int,Int)
 type Circle    = (Point,Float)
 
+
 imageWidth :: Int
 imageWidth = 360
 
@@ -53,21 +54,40 @@ svgCloudGen w h dataset =
 --
 -- Esta funcao deve gerar a lista de circulos em formato SVG.
 -- A implementacao atual eh apenas um teste que gera um circulo posicionado no meio da figura.
--- TODO: Alterar essa funcao para usar os dados do dataset.
+pegaUlt :: [Int] -> Int
+pegaUlt list = if ((tail list) == [])
+  then head list
+  else pegaUlt (tail list) 
+--
 svgBubbleGen:: Int -> Int -> [Int] -> [String]
-svgBubbleGen w h dataset = [svgCircle ((fromIntegral w/2, fromIntegral h/2), 10.0)]
+svgBubbleGen w h dataset = [geraTag (fromIntegral w/2) (fromIntegral h/2) (reverse (sort dataset))] -- [svgCircle ((fromIntegral w/2, fromIntegral h/2), 10.0)]
+--  where dat = map (fromIntegral dataset)
+--
+--
+-- Gera uma string contendo todos os circulos.
+geraTag :: Float -> Float -> [Int] -> String
+geraTag _ _ [] = []
+geraTag x y dataset = do 
+    svgCircle ((x, y), r) ++ (geraTag px py (tail dataset))
+    where
+      px = x * t * (cos t)
+      py = y * t * (sin t)
+      t = 0.59999999
+      elem = (head dataset)
+      pr = fromIntegral elem/90
+      r =  pr + 2
 --
 --
 -- Gera string representando um circulo em SVG. randomizando 3 valores para usar como RGB.
 geraRand :: IO Int
-geraRand = getStdRandom (randomR (0,255::Int))
+geraRand =  getStdRandom (randomR (0,255::Int))
 --     
 svgCircle :: Circle -> String
 svgCircle ((x,y),r) = printf "<circle cx=\"%f\" cy=\"%f\" r=\"%f\" fill=\"rgb(%d,%d,%d)\" />\n" x y r red green blue
   where
        red = unsafePerformIO geraRand
        green = unsafePerformIO geraRand
-       blue = unsafePerformIO geraRand
+       blue = unsafePerformIO geraRand 
 --
 --
 -- Configura o viewBox da imagem e coloca retangulo branco no fundo
