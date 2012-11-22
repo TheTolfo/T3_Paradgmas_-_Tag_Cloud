@@ -54,30 +54,59 @@ svgCloudGen w h dataset =
 --
 -- Esta funcao deve gerar a lista de circulos em formato SVG.
 -- A implementacao atual eh apenas um teste que gera um circulo posicionado no meio da figura.
-pegaUlt :: [Int] -> Int
+pegaUlt :: [Float] -> Float
 pegaUlt list = if ((tail list) == [])
   then head list
   else pegaUlt (tail list) 
 --
+--
+transformaEmRaio :: [Int] -> [Float]
+transformaEmRaio [] = []
+transformaEmRaio dataset = r : transformaEmRaio (tail dataset)
+  where
+       elem = (head dataset)
+       pr = fromIntegral elem/90
+       r =  pr + 2
+
+--
 svgBubbleGen:: Int -> Int -> [Int] -> [String]
 svgBubbleGen w h dataset = [geraTag (fromIntegral w/2) (fromIntegral h/2) (reverse (sort dataset))] -- [svgCircle ((fromIntegral w/2, fromIntegral h/2), 10.0)]
---  where dat = map (fromIntegral dataset)
+  where 
+       datR = transformaEmRaio dataset
 --
+--
+{--  ARRUMANDO AQUI  --}
+-- Gera uma lista do tipo Circle com todos os dados necessários.
+--geraLista :: Point -> Float -> Float -> Float -> [Float] -> [Circle]
+--geraLista _ _ _ _ [] = []
+--geraLista ponto a t ultR datR = (ponto, r) : geraLista newPonto a nt (tail datR)
+--  where
+--       newPonto = geraPonto (ponto, r) t (tail (head datR))
+--       r = head datR
 --
 -- Gera uma string contendo todos os circulos.
 geraTag :: Float -> Float -> [Int] -> String
 geraTag _ _ [] = []
 geraTag x y dataset = do 
     svgCircle ((x, y), r) ++ (geraTag px py (tail dataset))
+--    map ([svgCircle] ++) mountedCircles
     where
-      px = x * t * (cos t)
-      py = y * t * (sin t)
-      t = 0.59999999
-      elem = (head dataset)
-      pr = fromIntegral elem/90
-      r =  pr + 2
---
---
+       px = x + (5 * t * (cos t))
+       py = y + (5 * t * (sin t))
+       t = (x + y) / 100
+       elem = (head dataset)
+       pr = fromIntegral elem/90
+       r =  pr + 2
+--       mountedCircles = geraLista (x,y) a 0 ultR datR
+--       a = head datR + tail (head datR)
+
+
+
+{--
+
+    Esta parte ta concluida
+
+--}
 -- Gera string representando um circulo em SVG. randomizando 3 valores para usar como RGB.
 geraRand :: IO Int
 geraRand =  getStdRandom (randomR (0,255::Int))
