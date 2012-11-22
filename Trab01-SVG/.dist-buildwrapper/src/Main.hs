@@ -1,122 +1,125 @@
-{--
-        Esqueleto de programa para geração de bubble cloud em Haskell.
-        Mais informações em: http://www.inf.ufsm.br/~andrea/elc117-2012b
---}
-
-
--- Link para o repositório em: https://github.com/TheTolfo/T3_Paradgmas_-_Tag_Cloud.git
-
+-- Link para o repositório do projeto em: https://github.com/TheTolfo/T3_Paradgmas_-_Tag_Cloud.git
 module Main where
-
+--
 import System.IO.Unsafe -- Para remover o IO do tipo IO Int ods valores gerados randomicamente
 import System.Random -- Para gerar valores random (cor do circulo)
 import Text.Printf -- Oba, Haskell tem printf! :-)
 import Data.List -- Funções para lista
-
-type Point     = (Float,Float)
-type Color     = (Int,Int,Int)
-type Circle    = (Point,Float)
-
-
+--
+--
+-- Define os tipos de dados a ser utilizados
+type Point = (Float,Float)
+type Color = (Int,Int,Int)
+type Circle = (Point,Float)
+--
+--
 imageWidth :: Int
 imageWidth = 360
-
+--
 imageHeight :: Int
-imageHeight = 360
-
-
+imageHeight = 360 
+--
+--
 -- Funcao principal que faz leitura do dataset e gera arquivo SVG
 main :: IO ()
 main = do 
         strcontent <- readFile infile
-        let pairs = map (span (/= ' ')) (lines strcontent)
-            freqs = readInts (map snd pairs)
-        writeFile outfile (svgCloudGen imageWidth imageHeight freqs)
-        putStrLn "Ok!"
+        let pairs = map (span (/= ' ')) (lines strcontent) 
+            freqs = readInts (map snd pairs) -- le os valores inteiros do arquivo de entrada e os transforma em uma lista
+        writeFile outfile (svgCloudGen imageWidth imageHeight freqs) -- função que escreve no arquivo de saida
+        putStrLn "Codigo SVG criado com sucesso!" -- mostra o termino da execução
         where 
-                infile = "dataset.txt"
-                outfile = "tagcloud.svg"
+             infile = "dataset.txt" -- defien o arquivo que será lido
+             outfile = "tagcloud.svg" -- define o arquivo de saida
 --
 --
 -- Transforma lista de strings em lista de inteiros
 readInts :: [String] -> [Int]
-readInts ss = map read ss
+readInts ss = map read ss  -- lê as taxas de frequência como inteiros
 --
 --
 -- Gera o documento SVG da tag cloud, concatenando cabecalho, conteudo e rodape
 svgCloudGen :: Int -> Int -> [Int] -> String
 svgCloudGen w h dataset = 
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" ++ 
-        "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n" ++
-        (svgViewBox w h) ++
-        (concat (svgBubbleGen w h dataset)) ++ "</svg>\n"
+        "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n" ++  -- adiciona o cabeçalho do codigo svg
+        (svgViewBox w h) ++ -- gera um quadrado com os tamanhos definidos anteriormente, com o fundo branco
+        (concat (svgBubbleGen w h dataset)) ++ "</svg>\n"  -- gera os circulos e termina a utilização do quadrado criado anteriormente.
 --
 --
--- Esta funcao deve gerar a lista de circulos em formato SVG.
--- A implementacao atual eh apenas um teste que gera um circulo posicionado no meio da figura.
-pegaUlt :: [Float] -> Float
-pegaUlt list = if ((tail list) == [])
-  then head list
-  else pegaUlt (tail list) 
---
---
+-- Transforma as taxas de frequência em uma raios
 transformaEmRaio :: [Int] -> [Float]
 transformaEmRaio [] = []
 transformaEmRaio dataset = r : transformaEmRaio (tail dataset)
   where
-       elem = (head dataset)
-       pr = fromIntegral elem/90
-       r =  pr + 2
-
+       elem = (head dataset)  -- pega o primeiros elemento da lista
+       pr = fromIntegral elem/90 -- divide-o por 90 e o transforma é float
+       r =  pr + 2 -- soma 2 (para os circulos possuirem raios de um tamanho visivel)
 --
+--
+-- Funcão que adapta os dados e chama a criação dos circulos
 svgBubbleGen:: Int -> Int -> [Int] -> [String]
-svgBubbleGen w h dataset = [geraTag (fromIntegral w/2) (fromIntegral h/2) (reverse (sort dataset))] -- [svgCircle ((fromIntegral w/2, fromIntegral h/2), 10.0)]
+svgBubbleGen w h dataset = [geraTag (fromIntegral w/2) (fromIntegral h/2) (reverse (sort datR))] -- chama a função que gera os circulos em código svg
   where 
-       datR = transformaEmRaio dataset
+       datR = transformaEmRaio dataset -- transforma a lista de frequencia em uma lista de raios
 --
 --
-{--  ARRUMANDO AQUI  --}
+-- Verifica se os circulos não estão sobrepotos.
+verificaPonto :: Circle -> Circle -> Bool
+verificaPonto circa circb
+  |dist >= 0.1 = True -- se a distancia entre os pontos for maior que a soma dos raios mais 1, retorna verdadeiro
+  |dist < 0.1 = False -- se a distancia entre os pontos for mmenor que a soma dos raios mais 1, retorna falso
+  where
+       dist = pDist - (snd circa) + (snd circb) -- verifica se a distancia entre os pontos é maior ou menor que a soma dos raios
+       pDist = sqrt (xT + yT) -- calcula a distancia entre os dois pontos
+       xT = ((fst (fst circb)) - (fst (fst circa))) ^ 2 -- faz (x2 - x1)²
+       yT = ((snd (fst circb)) - (snd (fst circb))) ^ 2 -- faz (y2 - y1)²
+--
+--
+-- Gera um novo ponto valido (dentro da linha espiral e não sobrepondo outros circulos)
+geraPonto :: Circle -> Float -> Float -> Float -> Point -> (Circle, Float)
+geraPonto circ t a nR centro
+  |test == True = (((nX, nY),nR), t) -- retorna o novo circulo mais o valor atual de t
+  |test == False = geraPonto circ (t + 0.15) a nR centro
+  where
+       nX = (fst centro) + (a * t * (cos t)) -- gera o x 
+       nY = (snd centro) + (a * t * (sin t)) -- gera o y em razão do centro
+       test = verificaPonto circ ((nX,nY), nR) -- verifica se o x w y gerados para o circulo são validos
+--       
+--
 -- Gera uma lista do tipo Circle com todos os dados necessários.
---geraLista :: Point -> Float -> Float -> Float -> [Float] -> [Circle]
---geraLista _ _ _ _ [] = []
---geraLista ponto a t ultR datR = (ponto, r) : geraLista newPonto a nt (tail datR)
---  where
---       newPonto = geraPonto (ponto, r) t (tail (head datR))
---       r = head datR
+geraLista :: Circle -> Float -> Float -> [Float] -> Point-> [Circle]
+geraLista _ _ _ [] _ = []
+geraLista circ a t datR centro = circ : geraLista (fst newPonto) a (snd newPonto) (tail datR) centro 
+  where newPonto = geraPonto circ t a (head (tail datR)) centro
+--
+--
+-- Recursão que gera o código svg para os circulos
+geraCod :: [Circle] -> String
+geraCod [] = []
+geraCod lista = svgCircle (head lista) ++ geraCod (tail lista) -- gera o código de um circulo e chama uma recursão apra gerar o dos próximos.
+--
 --
 -- Gera uma string contendo todos os circulos.
-geraTag :: Float -> Float -> [Int] -> String
+geraTag :: Float -> Float -> [Float] -> String
 geraTag _ _ [] = []
-geraTag x y dataset = do 
-    svgCircle ((x, y), r) ++ (geraTag px py (tail dataset))
---    map ([svgCircle] ++) mountedCircles
+geraTag x y datR = geraCod mountedCircles --map ([svgCircle]) mountedCircles
     where
-       px = x + (5 * t * (cos t))
-       py = y + (5 * t * (sin t))
-       t = (x + y) / 100
-       elem = (head dataset)
-       pr = fromIntegral elem/90
-       r =  pr + 2
---       mountedCircles = geraLista (x,y) a 0 ultR datR
---       a = head datR + tail (head datR)
-
-
-
-{--
-
-    Esta parte ta concluida
-
---}
--- Gera string representando um circulo em SVG. randomizando 3 valores para usar como RGB.
+       mountedCircles = geraLista ((x,y),(head datR)) a 0 datR (x,y) -- gera a lista com os dados de cada circulo
+       a = (head datR + head (tail datR)) * 0.2-- define um valor para o a
+--
+--
+-- Gera um numero aleatório entre 0 e 255
 geraRand :: IO Int
-geraRand =  getStdRandom (randomR (0,255::Int))
---     
+geraRand = getStdRandom (randomR (0,255::Int))
+--    
+-- Gera string representando um circulo em SVG. randomizando 3 valores para usar como RGB
 svgCircle :: Circle -> String
-svgCircle ((x,y),r) = printf "<circle cx=\"%f\" cy=\"%f\" r=\"%f\" fill=\"rgb(%d,%d,%d)\" />\n" x y r red green blue
+svgCircle ((x,y),r) = printf "<circle cx=\"%f\" cy=\"%f\" r=\"%f\" fill=\"rgb(%d,%d,%d)\" />\n" x y r red green blue-- gera o codigo svg de cada circulo com uma cor randomica
   where
        red = unsafePerformIO geraRand
        green = unsafePerformIO geraRand
-       blue = unsafePerformIO geraRand 
+       blue = unsafePerformIO geraRand
 --
 --
 -- Configura o viewBox da imagem e coloca retangulo branco no fundo
