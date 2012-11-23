@@ -99,8 +99,9 @@ geraPonto circ t a nR centro = if (test == True)
 --
 -- Gera uma lista do tipo Circle com todos os dados necessários.
 geraLista :: [Circle] -> Float -> Float -> [Float] -> Point-> [Circle]
-geraLista _ _ _ [] _ = []
-geraLista circ a t datR centro = circ ++ (geraLista (circ ++ newPonto) a 0 (tail datR) centro)
+geraLista circ a t datR centro = if (datR == [])
+  then circ
+  else (geraLista (circ ++ newPonto) a 0 (tail datR) centro)
   where newPonto = geraPonto circ t a (head datR) centro
 --
 --
@@ -116,7 +117,7 @@ geraTag _ _ [] = []
 geraTag x y datR = geraCod mountedCircles --map ([svgCircle]) mountedCircles
     where
        mountedCircles = geraLista [((x,y),(head datR))] a 0 (tail datR) (x,y) -- gera a lista com os dados de cada circulo
-       a = (head datR + head (tail datR)) * 0.0004077-- define um valor para o a
+       a = (head datR + head (tail datR)) * 0.004077-- define um valor para o a
 --
 --
 -- Gera um numero aleatório entre 0 e 255
