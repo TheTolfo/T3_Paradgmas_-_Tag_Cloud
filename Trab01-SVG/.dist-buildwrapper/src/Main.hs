@@ -54,7 +54,7 @@ transformaEmRaio dataset = r : transformaEmRaio (tail dataset)
   where
        elem = (head dataset)  -- pega o primeiros elemento da lista
        pr = fromIntegral elem/23 -- divide-o por 90 e o transforma é float
-       r =  pr + 2 -- soma 2 (para os circulos possuirem raios de um tamanho visivel)
+       r =  pr + 2 -- soma 2 (para os circulos possuirem raios de um tamanho visivel, por menor que seja a frequencia)
 --
 --
 -- Funcão que adapta os dados e chama a criação dos circulos
@@ -79,23 +79,29 @@ verificaPonto ((x1,y1),r1) ((x2,y2),r2) = if (dist >= 0.1)
   where
        dist = (veDist (x1,y1) (x2,y2)) - r1 - r2 -- verifica se a distancia entre os pontos é maior ou menor que a soma dos raios
 --
+verificaP :: [Circle] -> Circle -> [Bool]
+verificaP [] _ = []
+verificaP listcirc circulo = test : (verificaP (tail listcirc) circulo)
+  where 
+       test = verificaPonto (head listcirc) circulo
+       
 --
 -- Gera um novo ponto valido (dentro da linha espiral e não sobrepondo outros circulos)
-geraPonto :: Circle -> Float -> Float -> Float -> Point -> (Circle, Float)
+geraPonto :: [Circle] -> Float -> Float -> Float -> Point -> [Circle]
 geraPonto circ t a nR centro = if (test == True)
-  then (((nX, nY),nR), t) -- retorna o novo circulo mais o valor atual de t
+  then [((nX, nY),nR)] -- retorna o novo circulo mais o valor atual de t
   else geraPonto circ (t + (2/90)) a nR centro
   where
        nX = (fst centro) + (a * t * (cos t)) -- gera o x 
        nY = (snd centro) + (a * t * (sin t)) -- gera o y em razão do centro
-       test = verificaPonto circ ((nX,nY), nR) -- verifica se o x w y gerados para o circulo são validos
+       test = (and (verificaP circ ((nX,nY), nR))) -- verifica se o x w y gerados para o circulo são validos
 --       
 --
 -- Gera uma lista do tipo Circle com todos os dados necessários.
-geraLista :: Circle -> Float -> Float -> [Float] -> Point-> [Circle]
+geraLista :: [Circle] -> Float -> Float -> [Float] -> Point-> [Circle]
 geraLista _ _ _ [] _ = []
-geraLista circ a t datR centro = circ : geraLista (fst newPonto) a (snd newPonto) (tail datR) centro 
-  where newPonto = geraPonto circ t a (head (tail datR)) centro
+geraLista circ a t datR centro = circ ++ (geraLista (circ ++ newPonto) a 0 (tail datR) centro)
+  where newPonto = geraPonto circ t a (head datR) centro
 --
 --
 -- Recursão que gera o código svg para os circulos
@@ -109,8 +115,8 @@ geraTag :: Float -> Float -> [Float] -> String
 geraTag _ _ [] = []
 geraTag x y datR = geraCod mountedCircles --map ([svgCircle]) mountedCircles
     where
-       mountedCircles = geraLista ((x,y),(head datR)) a 0 datR (x,y) -- gera a lista com os dados de cada circulo
-       a = (head datR + head (tail datR)) * 0.04077-- define um valor para o a
+       mountedCircles = geraLista [((x,y),(head datR))] a 0 (tail datR) (x,y) -- gera a lista com os dados de cada circulo
+       a = (head datR + head (tail datR)) * 0.0004077-- define um valor para o a
 --
 --
 -- Gera um numero aleatório entre 0 e 255
