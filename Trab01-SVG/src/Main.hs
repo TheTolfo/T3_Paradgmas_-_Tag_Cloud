@@ -110,7 +110,7 @@ geraTag _ _ [] = []
 geraTag x y datR = geraCod mountedCircles --map ([svgCircle]) mountedCircles
     where
        mountedCircles = geraLista ((x,y),(head datR)) a 0 datR (x,y) -- gera a lista com os dados de cada circulo
-       a = 5--(head datR + head (tail datR)) * 0.12-- define um valor para o a
+       a = (head datR + head (tail datR)) * 0.04077-- define um valor para o a
 --
 --
 -- Gera um numero aleatório entre 0 e 255
