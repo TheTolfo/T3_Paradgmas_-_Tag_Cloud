@@ -53,7 +53,7 @@ transformaEmRaio [] = []
 transformaEmRaio dataset = r : transformaEmRaio (tail dataset)
   where
        elem = (head dataset)  -- pega o primeiros elemento da lista
-       pr = fromIntegral elem/90 -- divide-o por 90 e o transforma é float
+       pr = fromIntegral elem/23 -- divide-o por 90 e o transforma é float
        r =  pr + 2 -- soma 2 (para os circulos possuirem raios de um tamanho visivel)
 --
 --
@@ -64,23 +64,27 @@ svgBubbleGen w h dataset = [geraTag (fromIntegral w/2) (fromIntegral h/2) (rever
        datR = transformaEmRaio dataset -- transforma a lista de frequencia em uma lista de raios
 --
 --
+-- Verifica distancia entre 2 pontos
+veDist :: Point -> Point -> Float
+veDist (x1,y1) (x2,y2) = sqrt (xT + yT) -- calcula a distancia entre os dois pontos
+  where
+       xT = (x2 - x1) ^ 2 -- faz (x2 - x1)²
+       yT = (y2 - y1) ^ 2 -- faz (y2 - y1)²
+--
 -- Verifica se os circulos não estão sobrepotos.
 verificaPonto :: Circle -> Circle -> Bool
-verificaPonto circa circb
-  |dist >= 0.1 = True -- se a distancia entre os pontos for maior que a soma dos raios mais 1, retorna verdadeiro
-  |dist < 0.1 = False -- se a distancia entre os pontos for mmenor que a soma dos raios mais 1, retorna falso
+verificaPonto ((x1,y1),r1) ((x2,y2),r2) = if (dist >= 0.1)
+  then True -- se a distancia entre os pontos for maior que a soma dos raios, retorna verdadeiro
+  else False -- se a distancia entre os pontos for menor que a soma dos raios, retorna falso
   where
-       dist = pDist - (snd circa) + (snd circb) -- verifica se a distancia entre os pontos é maior ou menor que a soma dos raios
-       pDist = sqrt (xT + yT) -- calcula a distancia entre os dois pontos
-       xT = ((fst (fst circb)) - (fst (fst circa))) ^ 2 -- faz (x2 - x1)²
-       yT = ((snd (fst circb)) - (snd (fst circb))) ^ 2 -- faz (y2 - y1)²
+       dist = (veDist (x1,y1) (x2,y2)) - r1 - r2 -- verifica se a distancia entre os pontos é maior ou menor que a soma dos raios
 --
 --
 -- Gera um novo ponto valido (dentro da linha espiral e não sobrepondo outros circulos)
 geraPonto :: Circle -> Float -> Float -> Float -> Point -> (Circle, Float)
-geraPonto circ t a nR centro
-  |test == True = (((nX, nY),nR), t) -- retorna o novo circulo mais o valor atual de t
-  |test == False = geraPonto circ (t + 0.15) a nR centro
+geraPonto circ t a nR centro = if (test == True)
+  then (((nX, nY),nR), t) -- retorna o novo circulo mais o valor atual de t
+  else geraPonto circ (t + (2/90)) a nR centro
   where
        nX = (fst centro) + (a * t * (cos t)) -- gera o x 
        nY = (snd centro) + (a * t * (sin t)) -- gera o y em razão do centro
@@ -106,7 +110,7 @@ geraTag _ _ [] = []
 geraTag x y datR = geraCod mountedCircles --map ([svgCircle]) mountedCircles
     where
        mountedCircles = geraLista ((x,y),(head datR)) a 0 datR (x,y) -- gera a lista com os dados de cada circulo
-       a = (head datR + head (tail datR)) * 0.2-- define um valor para o a
+       a = 5--(head datR + head (tail datR)) * 0.12-- define um valor para o a
 --
 --
 -- Gera um numero aleatório entre 0 e 255
