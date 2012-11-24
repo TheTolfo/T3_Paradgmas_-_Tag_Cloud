@@ -1,4 +1,12 @@
 -- Link para o repositório do projeto em: https://github.com/TheTolfo/T3_Paradgmas_-_Tag_Cloud.git
+
+{--
+
+OBS: A lib random não queria funcionar, então apenas a inclui como uma extençção no .cabal, se der algum erro na execução ou interpretação, 
+ baixe a versão completa da lib no site http://www.haskell.org/ghc/
+ 
+
+--}
 module Main where
 --
 import System.IO.Unsafe -- Para remover o IO do tipo IO Int ods valores gerados randomicamente
@@ -64,38 +72,42 @@ svgBubbleGen w h dataset = [geraTag (fromIntegral w/2) (fromIntegral h/2) (rever
        datR = transformaEmRaio dataset -- transforma a lista de frequencia em uma lista de raios
 --
 --
--- Verifica distancia entre 2 pontos
+-- Verifica distancia entre 2 pontos   d² = (x2 - x1)² + (y2 - y1)²
 veDist :: Point -> Point -> Float
-veDist (x1,y1) (x2,y2) = sqrt (xT + yT) -- calcula a distancia entre os dois pontos
+veDist (x1,y1) (x2,y2) = sqrt (xT + yT)
   where
-       xT = (x2 - x1) ^ 2 -- faz (x2 - x1)²
-       yT = (y2 - y1) ^ 2 -- faz (y2 - y1)²
+       xT = (x2 - x1) ^ 2
+       yT = (y2 - y1) ^ 2
 --
--- Verifica se os circulos não estão sobrepotos.
+--
+-- Verifica se os circulos não estão sobrepotos, se a distancia entre os pontos for maior que a soma dos raios, retorna verdadeiro, se 
+-- não estão, retorna falso
 verificaPonto :: Circle -> Circle -> Bool
 verificaPonto ((x1,y1),r1) ((x2,y2),r2) = if (dist >= 0.1)
-  then True -- se a distancia entre os pontos for maior que a soma dos raios, retorna verdadeiro
-  else False -- se a distancia entre os pontos for menor que a soma dos raios, retorna falso
+  then True
+  else False 
   where
-       dist = (veDist (x1,y1) (x2,y2)) - r1 - r2 -- verifica se a distancia entre os pontos é maior ou menor que a soma dos raios
+       dist = (veDist (x1,y1) (x2,y2)) - r1 - r2 
 --
+--
+-- Recursão que retorna uma lista do tipo bool, para testar se o ponto é valido ou não.
 verificaP :: [Circle] -> Circle -> [Bool]
 verificaP [] _ = []
 verificaP listcirc circulo = test : (verificaP (tail listcirc) circulo)
   where 
        test = verificaPonto (head listcirc) circulo
-       
+--       
 --
--- Gera um novo ponto valido (dentro da linha espiral e não sobrepondo outros circulos)
+-- Gera um novo ponto valido (dentro da linha espiral e não sobrepondo outros circulos).
 geraPonto :: [Circle] -> Float -> Float -> Float -> Point -> [Circle]
 geraPonto circ t a nR centro = if (test == True)
-  then [((nX, nY),nR)] -- retorna o novo circulo mais o valor atual de t
-  else geraPonto circ (t + (2/90)) a nR centro
+  then [((nX, nY),nR)]
+  else geraPonto circ (t + (0.01)) a nR centro
   where
-       nX = (fst centro) + (a * t * (cos t)) -- gera o x 
-       nY = (snd centro) + (a * t * (sin t)) -- gera o y em razão do centro
-       test = (and (verificaP circ ((nX,nY), nR))) -- verifica se o x w y gerados para o circulo são validos
---       
+       nX = (fst centro) + (a * t * (cos t)) -- gera o novo x  
+       nY = (snd centro) + (a * t * (sin t)) -- gera o novo y
+       test = (and (verificaP circ ((nX,nY), nR))) -- verifica se o ponto gerado para o circulo é valido
+--
 --
 -- Gera uma lista do tipo Circle com todos os dados necessários.
 geraLista :: [Circle] -> Float -> Float -> [Float] -> Point-> [Circle]
@@ -111,12 +123,12 @@ geraCod [] = []
 geraCod lista = svgCircle (head lista) ++ geraCod (tail lista) -- gera o código de um circulo e chama uma recursão apra gerar o dos próximos.
 --
 --
--- Gera uma string contendo todos os circulos.
+-- Gera uma string contendo todos os circulos e seus respectivos pontos.
 geraTag :: Float -> Float -> [Float] -> String
 geraTag _ _ [] = []
-geraTag x y datR = geraCod mountedCircles --map ([svgCircle]) mountedCircles
-    where
-       mountedCircles = geraLista [((x,y),(head datR))] a 0 (tail datR) (x,y) -- gera a lista com os dados de cada circulo
+geraTag x y datR = geraCod mountedCircles --map (svgCircle ++) mountedCircles
+  where
+       mountedCircles = geraLista [((x,y),(head datR))] a 0 (tail datR) (x,y)
        a = (head datR + head (tail datR)) * 0.004077-- define um valor para o a
 --
 --
