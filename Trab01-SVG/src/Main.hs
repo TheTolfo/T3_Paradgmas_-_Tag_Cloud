@@ -102,7 +102,7 @@ verificaP listcirc circulo = test : (verificaP (tail listcirc) circulo)
 geraPonto :: [Circle] -> Float -> Float -> Float -> Point -> [Circle]
 geraPonto circ t a nR centro = if (test == True)
   then [((nX, nY),nR)]
-  else geraPonto circ (t + (0.01)) a nR centro
+  else geraPonto circ (t + (0.001)) a nR centro
   where
        nX = (fst centro) + (a * t * (cos t)) -- gera o novo x  
        nY = (snd centro) + (a * t * (sin t)) -- gera o novo y
