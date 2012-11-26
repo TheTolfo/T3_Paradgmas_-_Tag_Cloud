@@ -61,8 +61,8 @@ transformaEmRaio [] = []
 transformaEmRaio dataset = r : transformaEmRaio (tail dataset)
   where
        elem = (head dataset)  -- pega o primeiros elemento da lista
-       pr = fromIntegral elem/23 -- divide-o por 90 e o transforma é float
-       r =  pr + 2 -- soma 2 (para os circulos possuirem raios de um tamanho visivel, por menor que seja a frequencia)
+       pr = fromIntegral elem/45 -- divide-o por 90 e o transforma é float
+       r =  pr + 5 -- soma 5 (para os circulos possuirem raios de um tamanho visivel, por menor que seja a frequencia)
 --
 --
 -- Funcão que adapta os dados e chama a criação dos circulos
@@ -102,7 +102,9 @@ verificaP listcirc circulo = test : (verificaP (tail listcirc) circulo)
 geraPonto :: [Circle] -> Float -> Float -> Float -> Point -> [Circle]
 geraPonto circ t a nR centro = if (test == True)
   then [((nX, nY),nR)]
-  else geraPonto circ (t + (0.01)) a nR centro
+  else if(nR < 15)
+          then geraPonto circ (t + 0.1) a nR centro
+          else geraPonto circ (t + 5) a nR centro
   where
        nX = (fst centro) + (a * t * (cos t)) -- gera o novo x  
        nY = (snd centro) + (a * t * (sin t)) -- gera o novo y
